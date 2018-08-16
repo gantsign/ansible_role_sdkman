@@ -1,0 +1,165 @@
+#compdef _sdk sdk
+#autoload
+
+__sdkman_list_versions_plain() {
+    local candidate="$1"
+
+    if [[ "$SDKMAN_AVAILABLE" == "false" ]]; then
+        __sdkman_list_installed_versions_plain "$candidate"
+    else
+        local csv=$(__sdkman_secure_curl "${SDKMAN_CANDIDATES_API}/candidates/${candidate}/${SDKMAN_PLATFORM}/versions/all")
+        echo "${csv//,/\n}"
+    fi
+}
+
+__sdkman_list_installable_versions_plain() {
+    local candidate="$1"
+
+    # capture these before chainging the IFS
+    local all_versions_str=$(__sdkman_list_versions_plain $candidate)
+    local installed_versions_str=$(__sdkman_list_installed_versions_plain $candidate)
+
+    # parse new-line separated values to arrays
+    local IFS=$'\n'
+    local all_versions=($(echo $all_versions_str))
+    local installed_versions=($(echo $installed_versions_str))
+
+    local installable_versions=()
+
+    local version
+    local installed_version
+    for version in "${all_versions[@]}"; do
+        local exclude='false'
+
+        for installed_version in "${installed_versions[@]}"; do
+            if [[ "$version" == "$installed_version" ]]; then
+                exclude='true'
+                break
+            fi
+        done
+        if [[ "$exclude" == 'false' ]]; then
+            installable_versions+=("$version")
+        fi
+    done
+
+    # write array as new-line separated values (IFS is the separator)
+    echo "${installable_versions[*]}"
+}
+
+__sdkman_list_installed_versions_plain() {
+    local csv=$(__sdkman_build_version_csv "$1")
+    echo "${csv//,/\n}"
+}
+
+_sdk() {
+    local -a commands=(
+        'install:install a candidate version'
+        'i:install a candidate version'
+        'uninstall:uninstall a candidate version'
+        'rm:uninstall a candidate version'
+        'list:list available candidate versions'
+        'ls:list available candidate versions'
+        'use:use a candidate version in current shell'
+        'u:use a candidate version in current shell'
+        'default:set the default candidate version for every shell'
+        'd:set the default candidate version for every shell'
+        'current:display current candidate version'
+        'c:display current candidate version'
+        'upgrade:upgrade outdated candidate version'
+        'ug:upgrade outdated candidate version'
+        'version:display the current version of sdk'
+        'v:display the current version of sdk'
+        'broadcast:display the last broadcast message'
+        'b:display the last broadcast message'
+        'help:show the sdk help message'
+        'h:show the sdk help message'
+        'offline:enable or disable offline mode'
+        'selfupdate:update the sdk'
+        'flush:flush sdk local state'
+    )
+
+    local -a offline_modes=(
+        'enable:Enable offline mode'
+        'disable:Disable offline mode'
+    )
+
+    local -a selfupdate_options=(
+        'force:Force sdk self update'
+    )
+
+    local -a flush_options=(
+        'candidates:Clears out the candidate list'
+        'broadcast:Clears out the broadcast cache'
+        'archives:Cleans the cache containing all downloaded SDK binaries'
+        'temp:Clears out the staging work folder'
+    )
+
+    _arguments '*:: :->subcmds' && return 0
+
+    case $CURRENT in
+        1)
+            _describe -t commands "sdk subcommand" commands
+            return
+        ;;
+
+        2)
+            case "${words[1]}" in
+
+                install|i|uninstall|rm|list|ls|use|u|default|d|current|c|upgrade|ug)
+                    _wanted candidates expl 'candidate' \
+                        compadd -- $SDKMAN_CANDIDATES
+                    return
+                ;;
+
+                offline)
+                    _describe -t modes "offline mode" offline_modes
+                    return
+                ;;
+
+                selfupdate)
+                    _describe -t updateopts "self update option" selfupdate_options
+                    return
+                ;;
+
+                flush)
+                    _describe -t flushopts "flush option" flush_options
+                    return
+                ;;
+            esac
+        ;;
+
+        3)
+            case "${words[1]}" in
+
+                uninstall|rm|default|d)
+                    _wanted versions expl 'version' \
+                        compadd -- $(__sdkman_list_installed_versions_plain "${words[2]}")
+                    return
+                ;;
+
+                install|i)
+                    _wanted versions expl 'version' \
+                        compadd -- $(__sdkman_list_installable_versions_plain "${words[2]}")
+                    return
+                ;;
+
+                use|u)
+                    _wanted versions expl 'version' \
+                        compadd -- $(__sdkman_list_versions_plain "${words[2]}")
+                    return
+                ;;
+            esac
+        ;;
+
+        4)
+            case "${words[1]}" in
+
+                install|i)
+                    _alternative ':path:_path_files -/'
+                    return
+                ;;
+
+            esac
+        ;;
+    esac
+}
