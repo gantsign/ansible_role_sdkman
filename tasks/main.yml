@@ -28,13 +28,13 @@
 
 - name: create the SDKMAN installation directories
   become: yes
-  become_user: '{{ item[0].username }}'
+  become_user: '{{ item[0] }}'
   file:
     state: directory
     mode: 'u=rwx,go=rx'
     dest: '{{ item[1] }}'
   with_nested:
-    - '{{ users }}'
+    - '{{ sdkman_users }}'
     - - '{{ sdkman_install_dir }}'
       - '{{ sdkman_install_dir }}/bin'
       - '{{ sdkman_install_dir }}/src'
@@ -55,54 +55,54 @@
 
 - name: save candidates
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   copy:
     content: "{{ candidates.content }}\n"
     dest: '{{ sdkman_install_dir }}/var/candidates'
     mode: 'u=rwx,go=rx'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: save config
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   template:
     src: 'config.j2'
     dest: '{{ sdkman_install_dir }}/etc/config'
     mode: 'u=rw,go=r'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: extract SDKMAN
   become: yes
   unarchive:
     src: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
     remote_src: yes
-    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item.username) }}/tmp/stage'
-    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item.username) }}/tmp/stage/sdkman-init.sh'
-    owner: '{{ item.username }}'
-  with_items: '{{ users }}'
+    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage'
+    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage/sdkman-init.sh'
+    owner: '{{ item }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: install SDKMAN init
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   copy:
     src: '{{ sdkman_install_dir }}/tmp/stage/sdkman-init.sh'
     remote_src: yes
     dest: '{{ sdkman_install_dir }}/bin/sdkman-init.sh'
-    owner: '{{ item.username }}'
+    owner: '{{ item }}'
     mode: 'u=rwx,go=rx'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: install SDKMAN scripts
   become: yes
-  become_user: '{{ item[0].username }}'
+  become_user: '{{ item[0] }}'
   copy:
     src: '{{ sdkman_install_dir }}/tmp/stage/{{ item[1] }}'
     remote_src: yes
     dest: '{{ sdkman_install_dir }}/src/{{ item[1] }}'
-    owner: '{{ item[0].username }}'
+    owner: '{{ item[0] }}'
     mode: 'u=rwx,go=rx'
   with_nested:
-    - '{{ users }}'
+    - '{{ sdkman_users }}'
     - - 'sdkman-version.sh'
       - 'sdkman-update.sh'
       - 'sdkman-selfupdate.sh'
@@ -126,25 +126,25 @@
 
 - name: save SDKMAN version
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   copy:
     content: "{{ sdkman_version }}\n"
     dest: '{{ sdkman_install_dir }}/var/version'
     mode: 'u=rwx,go=rx'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: install .sdkmanrc
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   template:
     src: 'sdkmanrc.j2'
     dest: '~/.sdkmanrc'
     mode: 'u=rw,go=r'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: configure .bashrc
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   lineinfile:
     path: '~/.bashrc'
     state: present
@@ -152,11 +152,11 @@
     line: 'source ~/.sdkmanrc #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!'
     create: yes
     mode: 'u=rw,go=r'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: configure .zshrc
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   lineinfile:
     path: '~/.zshrc'
     state: present
@@ -164,13 +164,13 @@
     line: 'source ~/.sdkmanrc #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!'
     create: yes
     mode: 'u=rw,go=r'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
 
 - name: install Zsh tab completion script
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ item }}'
   template:
     src: '_sdk.j2'
     dest: '{{ sdkman_install_zsh_dir }}/_sdk'
     mode: 'u=rw,go=r'
-  with_items: '{{ users }}'
+  with_items: '{{ sdkman_users }}'
