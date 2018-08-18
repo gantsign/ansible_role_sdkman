@@ -15,5 +15,5 @@
 
   roles:
     - role: ansible_role_sdkman
-      users:
-        - username: test_usr1
+      sdkman_users:
+        - test_usr1

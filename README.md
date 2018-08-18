@@ -61,10 +61,12 @@ sdkman_redis_sha256sum: '171ae6a3b4d4f0dd88e5e812943ca9b8f887fe78ddafa3b8a2f8b50
 # Directory to store files downloaded for SDKMAN
 sdkman_download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '/.ansible/tmp/downloads') }}"
 
-# SDKMAN is installer per user so you must specify at least one user
-users:
-  - username: example1
-  - username: example2
+# SDKMAN is installed per user so you must specify at least one user
+sdkman_users: []
+# e.g.
+# sdkman_users:
+#   - example_username1
+#   - example_username2
 ```
 
 Example Playbook
@@ -74,8 +76,8 @@ Example Playbook
 - hosts: servers
   roles:
     - role: gantsign.sdkman
-      users:
-        - username: example
+      sdkman_users:
+        - example_username
 ```
 
 Tab Completion for Zsh
@@ -92,12 +94,12 @@ be configured for each user).
 - hosts: servers
   roles:
     - role: gantsign.sdkman
-      users:
-        - username: example
+      sdkman_users:
+        - example_username
 
     - role: gantsign.antigen
       users:
-        - username: example
+        - username: example_username
           antigen_bundles:
             - name: sdkman
               url: '$HOME/.sdkman-zsh'
