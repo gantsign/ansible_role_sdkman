@@ -1,2 +1,4 @@
 ---
-# handlers file for ansible_role_sdkman
+- name: mandb
+  become: yes
+  command: /usr/bin/mandb

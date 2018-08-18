@@ -1,5 +1,19 @@
 ---
 - name: Converge
   hosts: all
+
+  pre_tasks:
+    - name: create test users
+      become: yes
+      user:
+        name: '{{ item }}'
+        home: '/home/{{ item }}'
+        shell: '/bin/bash'
+        createhome: yes
+      with_items:
+        - test_usr1
+
   roles:
     - role: ansible_role_sdkman
+      users:
+        - username: test_usr1

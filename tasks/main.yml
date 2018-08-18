@@ -1,2 +1,176 @@
 ---
-# tasks file for ansible_role_sdkman
+- name: install dependencies
+  become: yes
+  package:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - curl
+    - sed
+    - unzip
+    - zip
+
+- name: create download directory
+  file:
+    state: directory
+    mode: 'u=rwx,go=rx'
+    dest: '{{ sdkman_download_dir }}'
+
+- name: download SDKMAN
+  get_url:
+    url: '{{ sdkman_url }}'
+    dest: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
+    sha256sum: '{{ sdkman_redis_sha256sum }}'
+    force: no
+    use_proxy: yes
+    validate_certs: yes
+    mode: 'u=rw,go=r'
+
+- name: create the SDKMAN installation directories
+  become: yes
+  become_user: '{{ item[0].username }}'
+  file:
+    state: directory
+    mode: 'u=rwx,go=rx'
+    dest: '{{ item[1] }}'
+  with_nested:
+    - '{{ users }}'
+    - - '{{ sdkman_install_dir }}'
+      - '{{ sdkman_install_dir }}/bin'
+      - '{{ sdkman_install_dir }}/src'
+      - '{{ sdkman_install_dir }}/tmp'
+      - '{{ sdkman_install_dir }}/tmp/stage'
+      - '{{ sdkman_install_dir }}/ext'
+      - '{{ sdkman_install_dir }}/etc'
+      - '{{ sdkman_install_dir }}/var'
+      - '{{ sdkman_install_dir }}/archives'
+      - '{{ sdkman_install_dir }}/candidates'
+      - '{{ sdkman_install_zsh_dir }}'
+
+- name: download candidates
+  uri:
+    url: '{{ sdkman_candidates_url }}'
+    return_content: yes
+  register: candidates
+
+- name: save candidates
+  become: yes
+  become_user: '{{ item.username }}'
+  copy:
+    content: "{{ candidates.content }}\n"
+    dest: '{{ sdkman_install_dir }}/var/candidates'
+    mode: 'u=rwx,go=rx'
+  with_items: '{{ users }}'
+
+- name: save config
+  become: yes
+  become_user: '{{ item.username }}'
+  template:
+    src: 'config.j2'
+    dest: '{{ sdkman_install_dir }}/etc/config'
+    mode: 'u=rw,go=r'
+  with_items: '{{ users }}'
+
+- name: extract SDKMAN
+  become: yes
+  unarchive:
+    src: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
+    remote_src: yes
+    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item.username) }}/tmp/stage'
+    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item.username) }}/tmp/stage/sdkman-init.sh'
+    owner: '{{ item.username }}'
+  with_items: '{{ users }}'
+
+- name: install SDKMAN init
+  become: yes
+  become_user: '{{ item.username }}'
+  copy:
+    src: '{{ sdkman_install_dir }}/tmp/stage/sdkman-init.sh'
+    remote_src: yes
+    dest: '{{ sdkman_install_dir }}/bin/sdkman-init.sh'
+    owner: '{{ item.username }}'
+    mode: 'u=rwx,go=rx'
+  with_items: '{{ users }}'
+
+- name: install SDKMAN scripts
+  become: yes
+  become_user: '{{ item[0].username }}'
+  copy:
+    src: '{{ sdkman_install_dir }}/tmp/stage/{{ item[1] }}'
+    remote_src: yes
+    dest: '{{ sdkman_install_dir }}/src/{{ item[1] }}'
+    owner: '{{ item[0].username }}'
+    mode: 'u=rwx,go=rx'
+  with_nested:
+    - '{{ users }}'
+    - - 'sdkman-version.sh'
+      - 'sdkman-update.sh'
+      - 'sdkman-selfupdate.sh'
+      - 'sdkman-list.sh'
+      - 'sdkman-use.sh'
+      - 'sdkman-help.sh'
+      - 'sdkman-main.sh'
+      - 'sdkman-upgrade.sh'
+      - 'sdkman-cache.sh'
+      - 'sdkman-utils.sh'
+      - 'sdkman-flush.sh'
+      - 'sdkman-current.sh'
+      - 'sdkman-path-helpers.sh'
+      - 'sdkman-availability.sh'
+      - 'sdkman-uninstall.sh'
+      - 'sdkman-broadcast.sh'
+      - 'sdkman-env-helpers.sh'
+      - 'sdkman-default.sh'
+      - 'sdkman-offline.sh'
+      - 'sdkman-install.sh'
+
+- name: save SDKMAN version
+  become: yes
+  become_user: '{{ item.username }}'
+  copy:
+    content: "{{ sdkman_version }}\n"
+    dest: '{{ sdkman_install_dir }}/var/version'
+    mode: 'u=rwx,go=rx'
+  with_items: '{{ users }}'
+
+- name: install .sdkmanrc
+  become: yes
+  become_user: '{{ item.username }}'
+  template:
+    src: 'sdkmanrc.j2'
+    dest: '~/.sdkmanrc'
+    mode: 'u=rw,go=r'
+  with_items: '{{ users }}'
+
+- name: configure .bashrc
+  become: yes
+  become_user: '{{ item.username }}'
+  lineinfile:
+    path: '~/.bashrc'
+    state: present
+    regexp: '^source ~/.sdkmanrc'
+    line: 'source ~/.sdkmanrc #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!'
+    create: yes
+    mode: 'u=rw,go=r'
+  with_items: '{{ users }}'
+
+- name: configure .zshrc
+  become: yes
+  become_user: '{{ item.username }}'
+  lineinfile:
+    path: '~/.zshrc'
+    state: present
+    regexp: '^source ~/.sdkmanrc'
+    line: 'source ~/.sdkmanrc #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!'
+    create: yes
+    mode: 'u=rw,go=r'
+  with_items: '{{ users }}'
+
+- name: install Zsh tab completion script
+  become: yes
+  become_user: '{{ item.username }}'
+  template:
+    src: '_sdk.j2'
+    dest: '{{ sdkman_install_zsh_dir }}/_sdk'
+    mode: 'u=rw,go=r'
+  with_items: '{{ users }}'

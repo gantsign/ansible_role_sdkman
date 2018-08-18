@@ -1,2 +1,21 @@
 ---
-# vars file for ansible_role_sdkman
+# The SDKMAN API
+sdkman_service: 'https://api.sdkman.io/2'
+
+# The OS of the SDKMAN redistributable package
+sdkman_platform: 'Linux'
+
+# URL to download the SDKMAN from
+sdkman_url: '{{ sdkman_service }}/broker/download/sdkman/install/{{ sdkman_version }}/{{ sdkman_platform }}'
+
+# URL to download the SDKMAN candidates from
+sdkman_candidates_url: '{{ sdkman_service }}/candidates/all'
+
+# File name of the SDKMAN redistributable package
+sdkman_redis_filename: 'sdkman-{{ sdkman_version }}.zip'
+
+# The directory to install SDKMAN
+sdkman_install_dir: '~/.sdkman'
+
+# The directory to install SDKMAN zsh support
+sdkman_install_zsh_dir: '~/.sdkman-zsh'
