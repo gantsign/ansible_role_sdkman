@@ -1,9 +1,9 @@
 ---
 # SDKMAN version number
-sdkman_version: '5.7.3+337'
+sdkman_version: '5.7.4+362'
 
 # The SHA256 of the SDKMAN redistributable package
-sdkman_redis_sha256sum: '0a6a1a063ce42e76ac9ee3184546a50d9cd14367f03826f7e093bc6fc9769abc'
+sdkman_redis_sha256sum: '24bebc27c1b137cf9b1aca84aa88be00a5d6f3d6e0ccabff3189a22a7b231397'
 
 # Directory to store files downloaded for SDKMAN
 sdkman_download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '/.ansible/tmp/downloads') }}"
