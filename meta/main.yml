@@ -5,7 +5,7 @@ galaxy_info:
   description: Ansible role for installing the SDKMAN software development kit manager.
   company: GantSign Ltd.
   license: MIT
-  min_ansible_version: 2.6
+  min_ansible_version: 2.7
   platforms:
     - name: EL
       versions:
