@@ -45,6 +45,8 @@
       - '{{ sdkman_install_dir }}/archives'
       - '{{ sdkman_install_dir }}/candidates'
       - '{{ sdkman_install_zsh_dir }}'
+  loop_control:
+    label: '{{ item[0] }}: {{ item[1] }}'
 
 - name: download candidates
   uri:
@@ -122,6 +124,8 @@
       - 'sdkman-default.sh'
       - 'sdkman-offline.sh'
       - 'sdkman-install.sh'
+  loop_control:
+    label: '{{ item[0] }}: {{ item[1] }}'
 
 - name: save SDKMAN version
   become: yes
