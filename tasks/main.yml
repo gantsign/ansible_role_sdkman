@@ -80,6 +80,7 @@
     dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage'
     creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage/sdkman-init.sh'
     owner: '{{ item }}'
+    mode: 'o-w'
   with_items: '{{ sdkman_users }}'
 
 - name: install SDKMAN init
