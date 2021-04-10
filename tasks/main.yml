@@ -4,6 +4,7 @@
   package:
     name:
       - curl
+      - findutils
       - sed
       - unzip
       - zip

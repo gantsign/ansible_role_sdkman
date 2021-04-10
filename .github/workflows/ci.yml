@@ -26,6 +26,7 @@ jobs:
           - debian_min
           - ubuntu_max
           - opensuse
+          - fedora
         include:
           - ansible-version: '2.8.16'
             molecule-scenario: ubuntu_min
