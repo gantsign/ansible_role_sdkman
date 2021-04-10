@@ -63,6 +63,10 @@ _sdk() {
         'u:use a candidate version in current shell'
         'default:set the default candidate version for every shell'
         'd:set the default candidate version for every shell'
+        'home:get the absolute path of where the SDK resides'
+        'h:get the absolute path of where the SDK resides'
+        'env:set project specific candidate versions'
+        'e:set project specific candidate versions'
         'current:display current candidate version'
         'c:display current candidate version'
         'upgrade:upgrade outdated candidate version'
@@ -72,26 +76,31 @@ _sdk() {
         'broadcast:display the last broadcast message'
         'b:display the last broadcast message'
         'help:show the sdk help message'
-        'h:show the sdk help message'
         'offline:enable or disable offline mode'
         'selfupdate:update the sdk'
         'flush:flush sdk local state'
     )
 
     local -a offline_modes=(
-        'enable:Enable offline mode'
-        'disable:Disable offline mode'
+        'enable:enable offline mode'
+        'disable:disable offline mode'
     )
 
     local -a selfupdate_options=(
-        'force:Force sdk self update'
+        'force:force sdk self update'
     )
 
     local -a flush_options=(
-        'candidates:Clears out the candidate list'
-        'broadcast:Clears out the broadcast cache'
-        'archives:Cleans the cache containing all downloaded SDK binaries'
-        'temp:Clears out the staging work folder'
+        'candidates:clears out the candidate list'
+        'broadcast:clears out the broadcast cache'
+        'archives:cleans the cache containing all downloaded SDK binaries'
+        'temp:clears out the staging work folder'
+    )
+
+    local -a env_options=(
+        'init:create .sdkmanrc in current directory'
+        'install:installs candidates specified in the .sdkmanrc'
+        'clear:resets candidates to their default versions'
     )
 
     _arguments '*:: :->subcmds' && return 0
@@ -105,7 +114,7 @@ _sdk() {
         2)
             case "${words[1]}" in
 
-                install|i|uninstall|rm|list|ls|use|u|default|d|current|c|upgrade|ug)
+                install|i|uninstall|rm|list|ls|use|u|default|d|home|h|current|c|upgrade|ug)
                     _wanted candidates expl 'candidate' \
                         compadd -- $SDKMAN_CANDIDATES
                     return
@@ -125,13 +134,18 @@ _sdk() {
                     _describe -t flushopts "flush option" flush_options
                     return
                 ;;
+
+                env|e)
+                    _describe -t flushopts "env options" env_options
+                    return
+                ;;
             esac
         ;;
 
         3)
             case "${words[1]}" in
 
-                uninstall|rm|default|d)
+                uninstall|rm|home|h|default|d)
                     _wanted versions expl 'version' \
                         compadd -- $(__sdkman_list_installed_versions_plain "${words[2]}")
                     return

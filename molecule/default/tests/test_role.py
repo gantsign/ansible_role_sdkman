@@ -60,7 +60,7 @@ def test_files(host, file_path):
 
 def test_version(host):
     cmd = ('sudo --user test_usr1 --login '
-           'bash -c "source ~/.sdkmanrc && sdk version"')
+           'bash -c "source ~/.sdkmanshrc && sdk version"')
     version = host.check_output(cmd)
     pattern = 'SDKMAN [0-9\\.\\+]+'
     assert re.search(pattern, version)
