@@ -13,7 +13,7 @@ lint: |
 
 platforms:
   - name: ansible_role_sdkman_centos
-    image: centos:7
+    image: centos:8
     dockerfile: ../default/Dockerfile.j2
 
 provisioner:
