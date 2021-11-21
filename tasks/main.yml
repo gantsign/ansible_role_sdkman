@@ -46,7 +46,6 @@
       - '{{ sdkman_install_dir }}/archives'
       - '{{ sdkman_install_dir }}/candidates'
       - '{{ sdkman_install_dir }}/contrib/completion/bash'
-      - '{{ sdkman_install_zsh_dir }}'
   loop_control:
     label: '{{ item[0] }}: {{ item[1] }}'
 
@@ -163,14 +162,5 @@
     regexp: '^source ~/.sdkmanshrc'
     line: 'source ~/.sdkmanshrc #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!'
     create: yes
-    mode: 'u=rw,go=r'
-  with_items: '{{ sdkman_users }}'
-
-- name: install Zsh tab completion script
-  become: yes
-  become_user: '{{ item }}'
-  template:
-    src: '_sdk.j2'
-    dest: '{{ sdkman_install_zsh_dir }}/_sdk'
     mode: 'u=rw,go=r'
   with_items: '{{ sdkman_users }}'

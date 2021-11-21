@@ -13,8 +13,6 @@ import re
     '/home/test_usr1/.sdkman/var',
     '/home/test_usr1/.sdkman/archives',
     '/home/test_usr1/.sdkman/candidates',
-    '/home/test_usr1/.sdkman-zsh',
-
 ])
 def test_directories(host, dir_path):
     dir = host.file(dir_path)
