@@ -45,6 +45,7 @@
       - '{{ sdkman_install_dir }}/var'
       - '{{ sdkman_install_dir }}/archives'
       - '{{ sdkman_install_dir }}/candidates'
+      - '{{ sdkman_install_dir }}/contrib/completion/bash'
       - '{{ sdkman_install_zsh_dir }}'
   loop_control:
     label: '{{ item[0] }}: {{ item[1] }}'
@@ -79,55 +80,47 @@
     src: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
     remote_src: yes
     dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage'
-    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage/sdkman-init.sh'
+    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage/sdkman-{{ sdkman_version }}/bin/sdkman-init.sh'
     owner: '{{ item }}'
     mode: 'o-w'
   with_items: '{{ sdkman_users }}'
 
-- name: install SDKMAN init
-  become: yes
-  become_user: '{{ item }}'
-  copy:
-    src: '{{ sdkman_install_dir }}/tmp/stage/sdkman-init.sh'
-    remote_src: yes
-    dest: '{{ sdkman_install_dir }}/bin/sdkman-init.sh'
-    owner: '{{ item }}'
-    mode: 'u=rwx,go=rx'
-  with_items: '{{ sdkman_users }}'
-
-- name: install SDKMAN scripts
+- name: install SDKMAN
   become: yes
   become_user: '{{ item[0] }}'
   copy:
-    src: '{{ sdkman_install_dir }}/tmp/stage/{{ item[1] }}'
+    src: '{{ sdkman_install_dir }}/tmp/stage/sdkman-{{ sdkman_version }}/{{ item[1] }}'
     remote_src: yes
-    dest: '{{ sdkman_install_dir }}/src/{{ item[1] }}'
+    dest: '{{ sdkman_install_dir }}/{{ item[1] }}'
     owner: '{{ item[0] }}'
     mode: 'u=rwx,go=rx'
   with_nested:
     - '{{ sdkman_users }}'
-    - - 'sdkman-version.sh'
-      - 'sdkman-update.sh'
-      - 'sdkman-selfupdate.sh'
-      - 'sdkman-list.sh'
-      - 'sdkman-use.sh'
-      - 'sdkman-help.sh'
-      - 'sdkman-main.sh'
-      - 'sdkman-upgrade.sh'
-      - 'sdkman-cache.sh'
-      - 'sdkman-utils.sh'
-      - 'sdkman-flush.sh'
-      - 'sdkman-current.sh'
-      - 'sdkman-path-helpers.sh'
-      - 'sdkman-availability.sh'
-      - 'sdkman-uninstall.sh'
-      - 'sdkman-broadcast.sh'
-      - 'sdkman-env-helpers.sh'
-      - 'sdkman-default.sh'
-      - 'sdkman-offline.sh'
-      - 'sdkman-install.sh'
-      - 'sdkman-env.sh'
-      - 'sdkman-home.sh'
+    - - 'bin/sdkman-init.sh'
+      - 'src/sdkman-version.sh'
+      - 'src/sdkman-update.sh'
+      - 'src/sdkman-selfupdate.sh'
+      - 'src/sdkman-list.sh'
+      - 'src/sdkman-use.sh'
+      - 'src/sdkman-help.sh'
+      - 'src/sdkman-main.sh'
+      - 'src/sdkman-upgrade.sh'
+      - 'src/sdkman-cache.sh'
+      - 'src/sdkman-config.sh'
+      - 'src/sdkman-utils.sh'
+      - 'src/sdkman-flush.sh'
+      - 'src/sdkman-current.sh'
+      - 'src/sdkman-path-helpers.sh'
+      - 'src/sdkman-availability.sh'
+      - 'src/sdkman-uninstall.sh'
+      - 'src/sdkman-broadcast.sh'
+      - 'src/sdkman-env-helpers.sh'
+      - 'src/sdkman-default.sh'
+      - 'src/sdkman-offline.sh'
+      - 'src/sdkman-install.sh'
+      - 'src/sdkman-env.sh'
+      - 'src/sdkman-home.sh'
+      - 'contrib/completion/bash/sdk'
   loop_control:
     label: '{{ item[0] }}: {{ item[1] }}'
 
