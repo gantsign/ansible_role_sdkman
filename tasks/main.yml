@@ -20,7 +20,7 @@
   get_url:
     url: '{{ sdkman_url }}'
     dest: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
-    sha256sum: '{{ sdkman_redis_sha256sum }}'
+    checksum: 'sha256:{{ sdkman_redis_sha256sum }}'
     force: no
     use_proxy: yes
     validate_certs: yes
