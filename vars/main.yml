@@ -16,6 +16,3 @@ sdkman_redis_filename: 'sdkman-{{ sdkman_version }}.zip'
 
 # The directory to install SDKMAN
 sdkman_install_dir: '~/.sdkman'
-
-# The directory to install SDKMAN zsh support
-sdkman_install_zsh_dir: '~/.sdkman-zsh'
