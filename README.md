@@ -53,10 +53,10 @@ The following variables will change the behavior of this role:
 
 ```yaml
 # SDKMAN version number
-sdkman_version: '5.13.1'
+sdkman_version: '5.13.2'
 
 # The SHA256 of the SDKMAN redistributable package
-sdkman_redis_sha256sum: '938bfd774e6c3b3564e0ed662189e683329675189d2ad7dd41d8d1ab02be0988'
+sdkman_redis_sha256sum: '6b9a2daf84426362c99f36e2dd2d3d264df0777b5dcf02e72dd5574fef0643e1'
 
 # Directory to store files downloaded for SDKMAN
 sdkman_download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '/.ansible/tmp/downloads') }}"
