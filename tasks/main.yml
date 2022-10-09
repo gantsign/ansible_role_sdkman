@@ -1,13 +1,14 @@
 ---
+- name: load package manager vars
+  with_first_found:
+    - '../vars/packages/{{ ansible_pkg_mgr }}.yml'
+    - ../vars/packages/default.yml
+  include_vars: '{{ item }}'
+
 - name: install dependencies
   become: yes
   package:
-    name:
-      - curl
-      - findutils
-      - sed
-      - unzip
-      - zip
+    name: '{{ sdkman_dependencies }}'
     state: present
 
 - name: create download directory
@@ -25,6 +26,26 @@
     use_proxy: yes
     validate_certs: yes
     mode: 'u=rw,go=r'
+
+- name: download SDKMAN native
+  get_url:
+    url: '{{ sdkman_native_url }}'
+    dest: '{{ sdkman_download_dir }}/{{ sdkman_native_redis_filename }}'
+    checksum: 'sha256:{{ sdkman_native_redis_sha256sum }}'
+    force: no
+    use_proxy: yes
+    validate_certs: yes
+    mode: 'u=rw,go=r'
+
+# This is a bit of a hack to enable us to use --strip-components when unarchiving
+- name: convert zip archives to tar.gz
+  become: yes
+  command:
+    argv: [bsdtar, czf, '{{ item }}.tar.gz', '@{{ item }}']
+    creates: '{{ item }}.tar.gz'
+  with_items:
+    - '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
+    - '{{ sdkman_download_dir }}/{{ sdkman_native_redis_filename }}'
 
 - name: create the SDKMAN installation directories
   become: yes
@@ -73,55 +94,46 @@
     mode: 'u=rw,go=r'
   with_items: '{{ sdkman_users }}'
 
+- name: query user groups
+  become: yes
+  command:
+    argv: [id, -gn, '{{ item }}']
+  with_items: '{{ sdkman_users }}'
+  register: sdkman_user_groups_out
+  changed_when: false
+
+- name: set groups var
+  set_fact:
+    sdkman_user_groups: '{{ sdkman_user_groups | default({}) | combine({item.item: item.stdout}) }}'
+  with_items: '{{ sdkman_user_groups_out.results }}'
+  loop_control:
+    label: '{{ item.item }}: {{ item.stdout }}'
+
 - name: extract SDKMAN
   become: yes
   unarchive:
-    src: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}'
+    src: '{{ sdkman_download_dir }}/{{ sdkman_redis_filename }}.tar.gz'
     remote_src: yes
-    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage'
-    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/tmp/stage/sdkman-{{ sdkman_version }}/bin/sdkman-init.sh'
+    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}'
+    extra_opts: ['--strip-components=1']
+    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/var/version_native'
     owner: '{{ item }}'
+    group: '{{ sdkman_user_groups[item] }}'
     mode: 'o-w'
   with_items: '{{ sdkman_users }}'
 
-- name: install SDKMAN
+- name: extract SDKMAN native
   become: yes
-  become_user: '{{ item[0] }}'
-  copy:
-    src: '{{ sdkman_install_dir }}/tmp/stage/sdkman-{{ sdkman_version }}/{{ item[1] }}'
+  unarchive:
+    src: '{{ sdkman_download_dir }}/{{ sdkman_native_redis_filename }}.tar.gz'
     remote_src: yes
-    dest: '{{ sdkman_install_dir }}/{{ item[1] }}'
-    owner: '{{ item[0] }}'
-    mode: 'u=rwx,go=rx'
-  with_nested:
-    - '{{ sdkman_users }}'
-    - - 'bin/sdkman-init.sh'
-      - 'src/sdkman-version.sh'
-      - 'src/sdkman-update.sh'
-      - 'src/sdkman-selfupdate.sh'
-      - 'src/sdkman-list.sh'
-      - 'src/sdkman-use.sh'
-      - 'src/sdkman-help.sh'
-      - 'src/sdkman-main.sh'
-      - 'src/sdkman-upgrade.sh'
-      - 'src/sdkman-cache.sh'
-      - 'src/sdkman-config.sh'
-      - 'src/sdkman-utils.sh'
-      - 'src/sdkman-flush.sh'
-      - 'src/sdkman-current.sh'
-      - 'src/sdkman-path-helpers.sh'
-      - 'src/sdkman-availability.sh'
-      - 'src/sdkman-uninstall.sh'
-      - 'src/sdkman-broadcast.sh'
-      - 'src/sdkman-env-helpers.sh'
-      - 'src/sdkman-default.sh'
-      - 'src/sdkman-offline.sh'
-      - 'src/sdkman-install.sh'
-      - 'src/sdkman-env.sh'
-      - 'src/sdkman-home.sh'
-      - 'contrib/completion/bash/sdk'
-  loop_control:
-    label: '{{ item[0] }}: {{ item[1] }}'
+    dest: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}'
+    extra_opts: ['--strip-components=1']
+    creates: '{{ sdkman_install_dir | regex_replace("~", "~" + item) }}/var/version_native'
+    owner: '{{ item }}'
+    group: '{{ sdkman_user_groups[item] }}'
+    mode: 'o-w'
+  with_items: '{{ sdkman_users }}'
 
 - name: save SDKMAN version
   become: yes
@@ -129,6 +141,15 @@
   copy:
     content: "{{ sdkman_version }}\n"
     dest: '{{ sdkman_install_dir }}/var/version'
+    mode: 'u=rwx,go=rx'
+  with_items: '{{ sdkman_users }}'
+
+- name: save SDKMAN native version
+  become: yes
+  become_user: '{{ item }}'
+  copy:
+    content: "{{ sdkman_native_version }}\n"
+    dest: '{{ sdkman_install_dir }}/var/version_native'
     mode: 'u=rwx,go=rx'
   with_items: '{{ sdkman_users }}'
 

@@ -47,6 +47,7 @@ def test_directories(host, dir_path):
     '/home/test_usr1/.sdkman/src/sdkman-help.sh',
     '/home/test_usr1/.sdkman/var/version',
     '/home/test_usr1/.sdkman/var/candidates',
+    '/home/test_usr1/.sdkman/libexec/help',
 ])
 def test_files(host, file_path):
     installed_file = host.file(file_path)

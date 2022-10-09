@@ -1,0 +1,10 @@
+# Dependencies required to install/use SDKMAN!
+sdkman_dependencies:
+  - bsdtar
+  - curl
+  - findutils
+  - gzip
+  - sed
+  - tar
+  - unzip
+  - zip
